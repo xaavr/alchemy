@@ -133,3 +133,19 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 CELERY_BROKER_URL = "redis://redis:6379/0"
+
+# --- SESSION AND COOKIE SECURITY SETTINGS ---
+
+# Ensures the session cookie is only sent over HTTPS connections.
+SESSION_COOKIE_SECURE = True
+
+# Prevents client-side JavaScript from accessing the session cookie.
+SESSION_COOKIE_HTTPONLY = True
+
+# Restricts when the browser sends the cookie with cross-site requests.
+SESSION_COOKIE_SAMESITE = 'Lax'
+
+# Same for the CSRF cookie.
+CSRF_COOKIE_SECURE = True
+CSRF_COOKIE_HTTPONLY = True # While the CSRF token needs to be read by JS, the cookie itself can be HttpOnly.
+CSRF_COOKIE_SAMESITE = 'Lax'

@@ -1,11 +1,20 @@
 FROM python:3.11-slim
 
-RUN apt-get update && apt-get install -y ffmpeg
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
 
+# Set the working directory
 WORKDIR /code
-COPY requirements.txt .
+
+# Install system dependencies, including the HEIC delegate library
+RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg imagemagick libheif1 vim libheif-examples libdigest-sha-perl && rm -rf /var/lib/apt/lists/*
+
+# Install Python dependencies
+COPY requirements.txt /code/
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY . .
+# Copy the project code
+COPY . /code/
 
 CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
