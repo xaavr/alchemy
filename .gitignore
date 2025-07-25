@@ -36,15 +36,30 @@ Thumbs.db
 *.tar
 docker-compose.override.yml
 
-# Node
-node_modules/
-dist/
-build/
-npm-debug.log
-yarn-error.log
+# Frontend (Vite / Node)
+/frontend/node_modules/
+/frontend/dist/
+/frontend/dist-ssr/
+/frontend/build/
+/frontend/.env.local
+/frontend/.env.*.local
 
-# Frontend
-/frontend/.next/
-frontend/node_modules/
-frontend/.env.local
-frontend/.env.*
+# Log files
+/frontend/logs/
+/frontend/*.log
+/frontend/npm-debug.log*
+/frontend/yarn-debug.log*
+/frontend/yarn-error.log*
+/frontend/pnpm-debug.log*
+/frontend/lerna-debug.log*
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
