@@ -1,28 +1,51 @@
 from django.test import TestCase
+from rest_framework.test import APITestCase
+from django.core.files.uploadedfile import SimpleUploadedFile
+from .models import MediaFile, ConversionJob
+from rest_framework import status
+import os
 
-# Create your tests here.
-# Step 1: (Optional) Get an auth token if you want to test as a logged-in user
-# Replace 'your_username' and 'your_password'
-# TOKEN=$(curl -s -X POST -d "username=your_username&password=your_password" http://localhost:8000/api-token-auth/ | cut -d'"' -f4)
-# echo "Auth Token: $TOKE"N
+# Your curl commands can be removed or kept for reference
+# curl -v -c cookies.txt -F "file=@test.jpg" http://localhost:8000/api/files/
+# CSRF_TOKEN=$(grep 'csrftoken' cookies.txt | cut -f7) && curl -v -b cookies.txt -X POST -H "Content-Type: application/json" -H "X-CSRFToken: $CSRF_TOKEN" -d '{"original_file_id": "<PASTE_THE_FILE_ID_HERE>", "target_format": "png"}' http://localhost:8000/api/conversions/
 
-# Step 2: Upload a file (e.g., a file named 'test.mp4')
-# If using a token, add: -H "Authorization: Token $TOKEN"
-# FILE_RESPONSE=$(curl -s -X POST -H "Authorization: Token $TOKEN" -F "file=@/path/to/your/test.mp4" http://localhost:8000/api/files/)
-# echo "File Upload Response: $FILE_RESPONSE"
+class ConversionAPITestCase(APITestCase):
+    def test_upload_and_convert_flow(self):
+        """
+        Tests the full anonymous workflow:
+        1. Upload a file.
+        2. Request a conversion for that file.
+        """
+        # 1. Upload a file
+        # Create a simple dummy file in memory
+        dummy_file = SimpleUploadedFile("test.jpg", b"file_content", content_type="image/jpeg")
 
-# Extract the file ID from the response
-# FILE_ID=$(echo $FILE_RESPONSE | python3 -c "import sys, json; print(json.load(sys.stdin)['id'])")
-# echo "Uploaded File ID: $FILE_ID"
+        upload_url = '/api/files/'
+        upload_response = self.client.post(upload_url, {'file': dummy_file}, format='multipart')
 
-# Step 3: Request a conversion to 'mkv'
-# If using a token, add: -H "Authorization: Token $TOKEN"
-# CONVERSION_RESPONSE=$(curl -s -X POST -H "Authorization: Token $TOKEN" -H "Content-Type: application/json" -d "{\"original_file\": \"$FILE_ID\", \"target_format\": \"mkv\"}" http://localhost:8000/api/conversions/)
-# echo "Conversion Response: $CONVERSION_RESPONSE"
+        # Check that the upload was successful
+        self.assertEqual(upload_response.status_code, status.HTTP_201_CREATED)
+        self.assertIn('id', upload_response.data)
+        
+        # Get the ID of the uploaded file
+        file_id = upload_response.data['id']
+        self.assertEqual(MediaFile.objects.count(), 1)
 
-# Step 4: Check the logs of your celery worker to see the task run
-# docker-compose logs -f celery
+        # 2. Request a conversion
+        conversion_url = '/api/conversions/'
+        conversion_data = {
+            'original_file_id': file_id,
+            'target_format': 'png'
+        }
+        
+        conversion_response = self.client.post(conversion_url, conversion_data, format='json')
 
-# Upload the file and save the session cookie
-# FILE_RESPONSE=$(curl -s -c cookies.txt -F "file=@test.mp4" http://localhost:8000/api/files/)
-# echo "File Upload Response: $FILE_RESPONSE"
+        # Check that the conversion job was created successfully
+        self.assertEqual(conversion_response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(ConversionJob.objects.count(), 1)
+        
+        # Verify the created job has the correct details
+        conversion_job = ConversionJob.objects.first()
+        self.assertEqual(str(conversion_job.original_file.id), file_id)
+        self.assertEqual(conversion_job.target_format, 'png')
+        self.assertEqual(conversion_job.status, 'PENDING')
