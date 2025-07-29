@@ -46,12 +46,14 @@ INSTALLED_APPS = [
     'converter',
     'users',
     'rest_framework',
+    'corsheaders',  # Add this line
 ]
 
 AUTH_USER_MODEL = 'users.CustomUser'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'corsheaders.middleware.CorsMiddleware',  # Add this line
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -153,3 +155,14 @@ SESSION_COOKIE_SAMESITE = 'Lax'
 CSRF_COOKIE_SECURE = True
 CSRF_COOKIE_HTTPONLY = True # While the CSRF token needs to be read by JS, the cookie itself can be HttpOnly.
 CSRF_COOKIE_SAMESITE = 'Lax'
+
+# --- CORS SETTINGS ---
+
+# List of origins that are authorized to make cross-site HTTP requests.
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",  # Your Vite React frontend
+    "http://127.0.0.1:5173",
+]
+
+# Allow cookies to be sent with cross-origin requests (important for sessions)
+CORS_ALLOW_CREDENTIALS = True

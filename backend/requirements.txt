@@ -5,3 +5,4 @@ redis
 google-cloud-storage
 python-dotenv
 psycopg2-binary
+django-cors-headers
