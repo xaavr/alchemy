@@ -29,7 +29,7 @@ def user_directory_path(instance, filename):
         
     return os.path.join(base_dir, subdir, unique_filename)
 
-
+    
 class MediaFile(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     # User can be null for anonymous uploads
@@ -45,6 +45,7 @@ class MediaFile(models.Model):
         user_info = self.user.username if self.user else "Anonymous"
         return f"{self.filename} ({user_info})"
     
+
 class ConversionJob(models.Model):
     class Status(models.TextChoices):
         PENDING = 'PENDING', 'Pending'

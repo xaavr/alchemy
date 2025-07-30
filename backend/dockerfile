@@ -8,7 +8,7 @@ ENV PYTHONUNBUFFERED 1
 WORKDIR /code
 
 # Install system dependencies, including the HEIC delegate library
-RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg imagemagick && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg imagemagick sqlite3 && rm -rf /var/lib/apt/lists/*
 
 # Install Python dependencies
 COPY requirements.txt /code/

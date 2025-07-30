@@ -31,7 +31,8 @@ SECRET_KEY = 'django-insecure-y$y6+(^ox6*_-_hhj36nd*vs*9nbw_@y)7#&_mdwtx%q3+-v2&
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+# Add 'localhost' to allow requests from the browser
+ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
 
 # Application definition
@@ -46,14 +47,14 @@ INSTALLED_APPS = [
     'converter',
     'users',
     'rest_framework',
-    'corsheaders',  # Add this line
+    'corsheaders',
 ]
 
 AUTH_USER_MODEL = 'users.CustomUser'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'corsheaders.middleware.CorsMiddleware',  # Add this line
+    'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -143,18 +144,23 @@ CELERY_BROKER_URL = "redis://redis:6379/0"
 # --- SESSION AND COOKIE SECURITY SETTINGS ---
 
 # Ensures the session cookie is only sent over HTTPS connections.
-SESSION_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = False #true for production
 
 # Prevents client-side JavaScript from accessing the session cookie.
-SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_HTTPONLY = False #true for production
 
 # Restricts when the browser sends the cookie with cross-site requests.
 SESSION_COOKIE_SAMESITE = 'Lax'
 
 # Same for the CSRF cookie.
-CSRF_COOKIE_SECURE = True
-CSRF_COOKIE_HTTPONLY = True # While the CSRF token needs to be read by JS, the cookie itself can be HttpOnly.
+CSRF_COOKIE_SECURE = False #true for production
+CSRF_COOKIE_HTTPONLY = False #true for production
 CSRF_COOKIE_SAMESITE = 'Lax'
+
+# This tells Django that POST requests from your frontend are safe.
+CSRF_TRUSTED_ORIGINS = [
+    'http://localhost:5173',
+]
 
 # --- CORS SETTINGS ---
 

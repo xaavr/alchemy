@@ -16,7 +16,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from converter.views import MediaFileViewSet, ConversionJobViewSet
+from converter.views import MediaFileViewSet, ConversionJobViewSet, InitSessionView
 from rest_framework.routers import DefaultRouter
 from rest_framework.authtoken import views as drf_auth_views
 from django.conf import settings
@@ -29,5 +29,6 @@ router.register(r'conversions', ConversionJobViewSet, basename='conversion')
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api-token-auth/', drf_auth_views.obtain_auth_token),
+    path('api/init-session/', InitSessionView.as_view(), name='init-session'),
     path('api/', include(router.urls)),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

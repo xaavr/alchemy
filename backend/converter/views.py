@@ -1,50 +1,51 @@
+from django.http import JsonResponse
 from rest_framework import viewsets, permissions
+from rest_framework.response import Response
+from rest_framework.views import APIView
 from .models import MediaFile, ConversionJob
 from .serializers import MediaFileSerializer, ConversionJobSerializer
 from .tasks import convert_media_task
 
 class MediaFileViewSet(viewsets.ModelViewSet):
     serializer_class = MediaFileSerializer
-    # Allow any user, authenticated or not
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [permissions.AllowAny] # Allow anyone to upload
 
     def get_queryset(self):
-        """
-        Returns files for the currently authenticated user,
-        or for the current anonymous session.
-        """
         if self.request.user.is_authenticated:
             return MediaFile.objects.filter(user=self.request.user)
         
-        # For anonymous users, filter by session_id from the session
+        # Important: Only return files if there is a session key
         session_id = self.request.session.session_key
-        if not session_id:
-            return MediaFile.objects.none() # No session, no files
-        return MediaFile.objects.filter(session_id=session_id, user__isnull=True)
+        if session_id:
+            return MediaFile.objects.filter(session_id=session_id, user__isnull=True)
+        
+        return MediaFile.objects.none() # Return an empty queryset if no session
 
     def perform_create(self, serializer):
-        """
-        Saves the file, associating it with a user if authenticated,
-        or with a session ID if anonymous.
-        """
-        uploaded_file = self.request.data.get('file')
-        
-        # Ensure the session exists
-        if not self.request.session.session_key:
-            self.request.session.create()
+        # Get the uploaded file object from the request
+        uploaded_file = self.request.FILES.get('file')
+        if not uploaded_file:
+            # This case should be caught by serializer validation, but it's a good safeguard.
+            return 
 
+        # Prepare the data that needs to be set by the server
+        extra_data = {
+            'filename': uploaded_file.name,
+            'filesize': uploaded_file.size,
+        }
+
+        # Associate with user or session
         if self.request.user.is_authenticated:
-            serializer.save(
-                user=self.request.user,
-                filename=uploaded_file.name,
-                filesize=uploaded_file.size
-            )
+            extra_data['user'] = self.request.user
         else:
-            serializer.save(
-                session_id=self.request.session.session_key,
-                filename=uploaded_file.name,
-                filesize=uploaded_file.size
-            )
+            if not self.request.session.session_key:
+                self.request.session.create()
+            #     print(f"creating session...")
+            # print(f"Session ID: {self.request.session.session_key}")
+            extra_data['session_id'] = self.request.session.session_key
+        
+        # Save the instance, passing the extra data to be saved on the model
+        serializer.save(**extra_data)
 
 class ConversionJobViewSet(viewsets.ModelViewSet):
     serializer_class = ConversionJobSerializer
@@ -74,8 +75,34 @@ class ConversionJobViewSet(viewsets.ModelViewSet):
         # Save the instance first to get an ID
         if self.request.user.is_authenticated:
             instance = serializer.save(user=self.request.user)
+            print(f"Conversion job created for user: {self.request.user.username}")
         else:
             instance = serializer.save(session_id=self.request.session.session_key)
+            print(f"Conversion job created for anonymous session: {self.request.session.session_key}")
         
         # Launch the background task with the new conversion's ID
         convert_media_task.delay(instance.id)
+
+class InitSessionView(APIView):
+    """
+    Ensures a session is created and returns any existing files
+    associated with that session in a single request.
+    """
+    def get(self, request, *args, **kwargs):
+        # 1. Ensure a session exists.
+        if not request.session.session_key:
+            request.session.create()
+            # 2. Explicitly save the session to the database immediately.
+            request.session.save()
+
+        # 3. Get the session key.
+        session_key = request.session.session_key
+        
+        # 4. Find all files associated with this session.
+        files = MediaFile.objects.filter(session_id=session_key)
+        
+        # 5. Serialize the file data.
+        serializer = MediaFileSerializer(files, many=True)
+        
+        # 6. Return the list of files using DRF's Response.
+        return Response(serializer.data)

@@ -1,7 +1,14 @@
-import React, { useState, useEffect, useRef } from 'react'; // 1. Add useRef
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import PlusIcon from "./components/PlusIcon"; 
 import './index.css';
+
+// This tells axios to automatically read the CSRF token from the cookie
+// and send it in the X-CSRFToken header for POST, PUT, DELETE requests.
+axios.defaults.xsrfCookieName = 'csrftoken';
+axios.defaults.xsrfHeaderName = 'X-CSRFToken';
+axios.defaults.withXSRFToken = true;
+axios.defaults.withCredentials = true; // This allows cookies to be sent with requests
 
 // Define a type for our file objects for type safety
 interface UploadedFile {
@@ -14,33 +21,47 @@ interface UploadedFile {
 const UploadBox = () => {
   const [files, setFiles] = useState<UploadedFile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isUploading, setIsUploading] = useState(false); // State for upload progress
+  const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  // 2. Create a ref to access the hidden file input element
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Function to fetch files, which we can now reuse
+  // Function to fetch files remains the same
   const fetchFiles = async () => {
-    setIsLoading(true);
     try {
       const response = await axios.get('http://localhost:8000/api/files/', {
         withCredentials: true,
       });
       setFiles(response.data);
-      setError(null); // Clear previous errors on success
+      setError(null);
     } catch (err) {
       setError('Failed to fetch files.');
       console.error(err);
-    } finally {
-      setIsLoading(false);
     }
   };
 
   // Fetch files when the component first mounts
   useEffect(() => {
-    fetchFiles();
-  }, []);
+    const initializeAndFetch = async () => {
+      setIsLoading(true);
+      try {
+        // Step 1: Call the new endpoint to guarantee a session cookie is set.
+        await axios.get('http://localhost:8000/api/init-session/', {
+          withCredentials: true,
+        });
+
+        // Step 2: Now that the cookie is set, fetch the files.
+        await fetchFiles();
+
+      } catch (err) {
+        setError('Failed to initialize session.');
+        console.error(err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    initializeAndFetch();
+  }, []); // This effect still runs only once on mount
 
   // 3. Function to handle the actual file upload
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -54,12 +75,13 @@ const UploadBox = () => {
     setError(null);
 
     try {
-      await axios.post('http://localhost:8000/api/files/', formData, {
-        withCredentials: true,
+      // The `withCredentials` option is no longer needed here because it's set globally
+      const response = await axios.post('http://localhost:8000/api/files/', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       // After a successful upload, refresh the list to show the new file
-      await fetchFiles();
+      const newFile = response.data;
+      setFiles(prevFiles => [...prevFiles, newFile]);
     } catch (err) {
       setError('File upload failed. Please try again.');
       console.error(err);
@@ -108,6 +130,16 @@ const UploadBox = () => {
             </div>
           )
         )}
+        <div className="flex justify-center items-center h-full">
+              {/* 5. Add onClick to this div */}
+              <div 
+                className="flex items-center gap-2 p-2 rounded-md bg-[#D4DCE6] cursor-pointer hover:bg-gray-300 transition-colors"
+                onClick={handleUploadClick}
+              >
+                <PlusIcon className="w-4 h-4" />
+                <p className="text-black text-sm opacity-50">click or drag to upload files</p>
+              </div>
+            </div>
       </div>
       {/* 6. Add the hidden file input element */}
       <input

@@ -4,8 +4,8 @@ from .models import MediaFile, ConversionJob
 class MediaFileSerializer(serializers.ModelSerializer):
     class Meta:
         model = MediaFile
-        fields = ['id', 'file', 'filename', 'filesize', 'uploaded_at', 'user']
-        read_only_fields = ('filename', 'filesize', 'uploaded_at', 'user')
+        fields = ['id', 'file', 'filename', 'filesize', 'uploaded_at', 'user', 'session_id']
+        read_only_fields = ('filename', 'filesize', 'uploaded_at', 'user', 'session_id')
         extra_kwargs = {
             # 'file' is for upload only. It's required but not sent back in the response.
             'file': {'write_only': True, 'required': True}
