@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import PlusIcon from "./components/PlusIcon"; 
+// import PlusIcon from "./components/PlusIcon";
+import AddIcon from "./assets/AddIcon.svg?react";
 import  RemoveIcon from "./assets/RemoveIcon.svg?react";
 import './index.css';
 
@@ -128,6 +129,7 @@ const UploadBox = () => {
                 <span className="truncate pr-2">{file.filename}</span>
                 <div className="w-5 h-5 text-red-600 hover:bg-[#E6D4D4] rounded-full flex-shrink-0 cursor-pointer">
                   <RemoveIcon
+                    className="opacity-50 hover:opacity-100"
                     onClick={() => handleRemoveFile(file.id)} 
                   />
                 </div>
@@ -137,7 +139,7 @@ const UploadBox = () => {
               className="flex items-center justify-center gap-2 p-2 bg-[#D4DCE6] rounded-md cursor-pointer hover:bg-gray-300 transition-colors"
               onClick={handleUploadClick}
             >
-              <PlusIcon className="w-4 h-4 text-black opacity-50" />
+              <AddIcon className="w-4 h-4 text-black opacity-50" />
               <p className="text-black text-sm opacity-50">click or drag to upload files</p>
             </li>
           </ul>
