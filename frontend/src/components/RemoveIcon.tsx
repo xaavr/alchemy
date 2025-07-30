@@ -1,4 +1,4 @@
-const PlusIcon = ({ className }: { className?: string }) => {
+const RemoveIcon = ({ className }: { className?: string }) => {
   return (
     <svg
       fill="currentColor"
@@ -10,6 +10,6 @@ const PlusIcon = ({ className }: { className?: string }) => {
       <path d="M275,100 v125 h125 v50 h-125 v125 h-50 v-125 h-125 v-50 h125 v-125 Z" />
     </svg>
   );
-};
+}
 
-export default PlusIcon;
+export default RemoveIcon;

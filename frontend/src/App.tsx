@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import PlusIcon from "./components/PlusIcon"; 
+import  RemoveIcon from "./assets/RemoveIcon.svg?react";
 import './index.css';
 
 // This tells axios to automatically read the CSRF token from the cookie
@@ -90,6 +91,17 @@ const UploadBox = () => {
     }
   };
 
+  // 2. Add a function to handle file deletion
+  const handleRemoveFile = async (fileId: string) => {
+    try {
+      await axios.delete(`http://localhost:8000/api/files/${fileId}/`);
+      setFiles(currentFiles => currentFiles.filter(file => file.id !== fileId));
+    } catch (err) {
+      setError('Failed to delete file.');
+      console.error(err);
+    }
+  };
+
   // 4. Function to trigger the hidden input when the button is clicked
   const handleUploadClick = () => {
     fileInputRef.current?.click();
@@ -112,15 +124,16 @@ const UploadBox = () => {
           <ul className="space-y-2">
             {/* Map over the existing files as before */}
             {files.map(file => (
-              <li key={file.id} className="p-2 bg-[#D4DCE6] rounded-md text-black text-sm">
-                {file.filename}
+              <li key={file.id} className="flex items-center justify-between p-2 bg-[#D4DCE6] rounded-md text-black text-sm">
+                <span className="truncate pr-2">{file.filename}</span>
+                <div className="w-5 h-5 text-red-600 hover:bg-[#E6D4D4] rounded-full flex-shrink-0 cursor-pointer">
+                  <RemoveIcon
+                    onClick={() => handleRemoveFile(file.id)} 
+                  />
+                </div>
               </li>
             ))}
-            {/* 
-              Add the upload button as a permanent list item.
-              It will appear after the files, or by itself if the list is empty.
-            */}
-            <li 
+            <li
               className="flex items-center justify-center gap-2 p-2 bg-[#D4DCE6] rounded-md cursor-pointer hover:bg-gray-300 transition-colors"
               onClick={handleUploadClick}
             >
