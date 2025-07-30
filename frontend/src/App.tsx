@@ -107,41 +107,30 @@ const UploadBox = () => {
         {isUploading && <p>Uploading file...</p>}
         {error && <p className="text-red-500">{error}</p>}
         
-        {/* Only show the list or upload prompt when not loading */}
+        {/* This block is now much simpler */}
         {!isLoading && !isUploading && !error && (
-          files.length > 0 ? (
-            <ul className="space-y-2">
-              {files.map(file => (
-                <li key={file.id} className="p-2 bg-[#D4DCE6] rounded-md text-black text-sm">
-                  {file.filename}
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <div className="flex justify-center items-center h-full">
-              {/* 5. Add onClick to this div */}
-              <div 
-                className="flex items-center gap-2 p-2 rounded-md bg-[#D4DCE6] cursor-pointer hover:bg-gray-300 transition-colors"
-                onClick={handleUploadClick}
-              >
-                <PlusIcon className="w-4 h-4" />
-                <p className="text-black text-sm opacity-50">click or drag to upload files</p>
-              </div>
-            </div>
-          )
+          <ul className="space-y-2">
+            {/* Map over the existing files as before */}
+            {files.map(file => (
+              <li key={file.id} className="p-2 bg-[#D4DCE6] rounded-md text-black text-sm">
+                {file.filename}
+              </li>
+            ))}
+            {/* 
+              Add the upload button as a permanent list item.
+              It will appear after the files, or by itself if the list is empty.
+            */}
+            <li 
+              className="flex items-center justify-center gap-2 p-2 bg-[#D4DCE6] rounded-md cursor-pointer hover:bg-gray-300 transition-colors"
+              onClick={handleUploadClick}
+            >
+              <PlusIcon className="w-4 h-4 text-black opacity-50" />
+              <p className="text-black text-sm opacity-50">click or drag to upload files</p>
+            </li>
+          </ul>
         )}
-        <div className="flex justify-center items-center h-full">
-              {/* 5. Add onClick to this div */}
-              <div 
-                className="flex items-center gap-2 p-2 rounded-md bg-[#D4DCE6] cursor-pointer hover:bg-gray-300 transition-colors"
-                onClick={handleUploadClick}
-              >
-                <PlusIcon className="w-4 h-4" />
-                <p className="text-black text-sm opacity-50">click or drag to upload files</p>
-              </div>
-            </div>
       </div>
-      {/* 6. Add the hidden file input element */}
+      {/* The hidden file input remains the same */}
       <input
         type="file"
         ref={fileInputRef}
